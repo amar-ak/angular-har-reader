@@ -1,70 +1,173 @@
-import { Component, VERSION } from '@angular/core';
-
-
+import { Component, VERSION } from "@angular/core";
 
 @Component({
-  selector: 'my-app',
-  templateUrl: './app.component.html',
-  styleUrls: [ './app.component.css' ]
+  selector: "my-app",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.css"]
 })
-export class AppComponent  {
-  name = 'Angular ' + VERSION.major;
+export class AppComponent {
+  name = "Har Parser " + '0.01';
 
   fileToUpload: File = null;
   handleFileInput(event) {
-    
-    
-
     let fileList: FileList = event.target.files;
-    if(fileList.length > 0) {
-     
-        let file: File = fileList[0];
-      
-         var reader = new FileReader();
+    let apiList: String[] = ["updatePrice", "updateCartLineItems"];
+    if (fileList.length > 0) {
+      let file: File = fileList[0];
 
-          reader.onload = function(e) { 
-            var csvToUse ;
-  
-            var jsonDt = JSON.parse(e.target.result.toString());
-            console.log(jsonDt) ;
-            var jsonObj = jsonDt.log.entries ;
-            console.log(jsonObj) ;
+      let reader = new FileReader();
 
+      reader.onload = function(e) {
+        let csvToUse;
+        let parsedApis = new Map();
+        let nonParsedApis = new Map();
 
+        var jsonDt = JSON.parse(e.target.result.toString());
+        // console.log(jsonDt) ;
+        var jsonObj = jsonDt.log.entries;
+        //console.log(jsonObj) ;
 
- var flatten = function(data) {
-    var result = {};
-    function recurse (cur, prop) {
-        if (Object(cur) !== cur) {
-            result[prop] = cur;
-        } else if (Array.isArray(cur)) {
-             for(var i=0, l=cur.length; i<l; i++)
-                 recurse(cur[i], prop ? prop+"."+i : ""+i);
-            if (l == 0)
-                result[prop] = [];
-        } else {
-            var isEmpty = true;
-            for (var p in cur) {
-                isEmpty = false;
-                recurse(cur[p], prop ? prop+"."+p : p);
+        let flatten = function(data) {
+          var result = {};
+          function search(payLoad) {
+            for (let entry of payLoad) {
+              if (
+                entry.request.method != "GET" &&
+                entry.request.postData !== null
+              ) {
+                let apiInLoad = entry.request.postData.text;
+
+                //convert this json string to json
+                let postJData = JSON.parse(apiInLoad);
+                //  debugger ;
+                console.log("Method :" + postJData.method);
+                switch (postJData.method) {
+                  case "updatePrice":
+                  case "updateCartLineItems": {
+                    if (parsedApis.get("pricing") == null) {
+                      if (entry.time != null)
+                        parsedApis.set("pricing", entry.time);
+                    } else {
+                      //get the value to add
+
+                      if (entry.time != null) {
+                        let recTime = parsedApis.get("pricing");
+                        recTime += parsedApis.set("pricing", entry.time);
+                      }
+                    }
+                    break;
+                  }
+                  case "addToCart": {
+                    let varx: number = 0;
+                    break;
+                  }
+
+                  default: {
+                    if (nonParsedApis.get(postJData.method) == null)
+                      nonParsedApis.set(postJData.method, entry.time);
+                    else {
+                      if (entry.time != null) {
+                        let recTime = nonParsedApis.get(postJData.method);
+                        recTime += entry.time;
+                        nonParsedApis.set(postJData.method, recTime);
+                      }
+                    }
+                    break;
+                  }
+                }
+              }
             }
-            if (isEmpty)
-                result[prop] = {};
-        }
+          }
+          search(data);
+          return parsedApis;
+        };
+
+        let apiData = flatten(jsonObj);
+        console.log("Tracked apiData" + JSON.stringify(apiData));
+        console.log("Non tracked apiData" + JSON.stringify(nonParsedApis));
+
+
+   let downloader = function downloadAsCSV() {
+    
+
+/*
+   function ConvertToCSV(objArray: any): string 
+    {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+    var row = "";
+
+    for (var index in objArray[0]) {
+        //Now convert each value to string and comma-separated
+        row += index + ',';
     }
-    recurse(data, "");
-    return result;
+    row = row.slice(0, -1);
+    //append Label row with line break
+    str += row + '\r\n';
+
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line != '') line += ','
+
+            line += array[i][index];
+        }
+        str += line + '\r\n';
+    }
+    return str;
+}*///Iterate over map values
+let csvData : string = '' ;
+
+
+     csvData += 'API Name' + ',' + 'Total time (ms)' + "\r\n";
+
+
+parsedApis.forEach((value: number, key: string) => {
+       csvData += key + ',' + value + "\r\n";
+});
+
+
+
+     csvData += '--------Non Tracked API------'  + "\r\n";
+
+
+
+nonParsedApis.forEach((value: number, key: string) => {
+       csvData += key + ',' + value + "\r\n";
+});
+
+  var blob = new Blob([csvData], { type: 'text/csv' });
+  var url = window.URL.createObjectURL(blob);
+
+  if(navigator.msSaveOrOpenBlob) {
+    navigator.msSaveBlob(blob, 'download_report.csv');
+  } else {
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = 'download_report.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  window.URL.revokeObjectURL(url);
+} 
+downloader() ;
+      };
+
+      reader.readAsText(file);
+    }
+  }
 }
 
-         /*   var recMap = function(obj) {
+/*   var recMap = function(obj) {
   return obj.map(obj, function(val) { 
     return typeof val !== 'object' ? val : recMap(val); 
   });
 }*/
 
-           // var fields = Object.keys(jsonObj[0]) ;
+// var fields = Object.keys(jsonObj[0]) ;
 
-           /* let flatten = (obj, path = []) => {
+/* let flatten = (obj, path = []) => {
                console.log(Object.keys(obj))
                if(Object !== null && Object.keys !==null)
                
@@ -88,18 +191,3 @@ csv.unshift(fields.join(',')) // add header column
  csv = csv.join('\r\n');
 console.log(csv)
 */
- csvToUse = flatten(jsonObj) ;
- console.log(csvToUse);
-
-  }
-
-  reader.readAsText(file);
-
-
-    }
-
-}
-
-
- 
-}
