@@ -6,7 +6,7 @@ import { Component, VERSION } from "@angular/core";
   styleUrls: ["./app.component.css"]
 })
 export class AppComponent {
-  name = "Har Parser " + '0.01';
+  name = "Har Parser " + "0.01";
 
   fileToUpload: File = null;
   handleFileInput(event) {
@@ -44,31 +44,70 @@ export class AppComponent {
                 switch (postJData.method) {
                   case "updatePrice":
                   case "updateCartLineItems": {
-                    if (parsedApis.get("pricing") == null) {
-                      if (entry.time != null)
-                        parsedApis.set("pricing", entry.time);
+                    if (parsedApis.get("Pricing") == null) {
+                      if (entry.time != null) {
+                        let recTime: [number, number];
+                        recTime = [entry.time, 1];
+                        parsedApis.set("Pricing", recTime);
+                      }
                     } else {
                       //get the value to add
 
                       if (entry.time != null) {
-                        let recTime = parsedApis.get("pricing");
-                        recTime += parsedApis.set("pricing", entry.time);
+                        let recTime = parsedApis.get("Pricing");
+                        let p1 = recTime[0];
+                        p1 += entry.time;
+
+                        let p2 = recTime[1];
+                        p2++;
+                        recTime = [p1, p2];
+
+                        parsedApis.set("Pricing", recTime);
                       }
                     }
                     break;
                   }
                   case "addToCart": {
-                    let varx: number = 0;
+                    if (parsedApis.get("AddToCart") == null) {
+                      if (entry.time != null) {
+                        let recTime: [number, number];
+                        recTime = [entry.time, 1];
+                        parsedApis.set("AddToCart", recTime);
+                      }
+                    } else {
+                      //get the value to add
+
+                      if (entry.time != null) {
+                        let recTime = parsedApis.get("AddToCart");
+                        let p1 = recTime[0];
+                        p1 += entry.time;
+
+                        let p2 = recTime[1];
+                        p2++;
+                        recTime = [p1, p2];
+
+                        parsedApis.set("AddToCart", recTime);
+                      }
+                    }
                     break;
                   }
 
                   default: {
-                    if (nonParsedApis.get(postJData.method) == null)
-                      nonParsedApis.set(postJData.method, entry.time);
-                    else {
+                    if (nonParsedApis.get(postJData.method) == null) {
+                      if (entry.time != null) {
+                        let recTime: [number, number];
+                        recTime = [entry.time, 1];
+                        nonParsedApis.set(postJData.method, recTime);
+                      }
+                    } else {
                       if (entry.time != null) {
                         let recTime = nonParsedApis.get(postJData.method);
-                        recTime += entry.time;
+                        let p1 = recTime[0];
+                        p1 += entry.time;
+
+                        let p2 = recTime[1];
+                        p2++;
+                        recTime = [p1, p2];
                         nonParsedApis.set(postJData.method, recTime);
                       }
                     }
@@ -84,74 +123,45 @@ export class AppComponent {
 
         let apiData = flatten(jsonObj);
         console.log("Tracked apiData" + JSON.stringify(apiData));
-        console.log("Non tracked apiData" + JSON.stringify(nonParsedApis));
+        console.log("Non grouped apiData" + JSON.stringify(nonParsedApis));
 
+        let downloader = function downloadAsCSV() {
+          let csvData: string = "";
 
-   let downloader = function downloadAsCSV() {
-    
+          csvData +=
+            "Action Name" +
+            "," +
+            "Total time (ms)" +
+            "," +
+            "Total Calls" +
+            "\r\n";
 
-/*
-   function ConvertToCSV(objArray: any): string 
-    {
-    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
-    var str = '';
-    var row = "";
+          parsedApis.forEach((value: [number, number], key: string) => {
+            csvData += key + "," + value[0] + "," + value[1] + "\r\n";
+          });
 
-    for (var index in objArray[0]) {
-        //Now convert each value to string and comma-separated
-        row += index + ',';
-    }
-    row = row.slice(0, -1);
-    //append Label row with line break
-    str += row + '\r\n';
+          csvData += "--------Non Tracked API------" + "\r\n";
 
-    for (var i = 0; i < array.length; i++) {
-        var line = '';
-        for (var index in array[i]) {
-            if (line != '') line += ','
+          nonParsedApis.forEach((value: [number, number], key: string) => {
+            csvData += key + "," + value[0] + "," + value[1] + "\r\n";
+          });
 
-            line += array[i][index];
-        }
-        str += line + '\r\n';
-    }
-    return str;
-}*///Iterate over map values
-let csvData : string = '' ;
+          var blob = new Blob([csvData], { type: "text/csv" });
+          var url = window.URL.createObjectURL(blob);
 
-
-     csvData += 'API Name' + ',' + 'Total time (ms)' + "\r\n";
-
-
-parsedApis.forEach((value: number, key: string) => {
-       csvData += key + ',' + value + "\r\n";
-});
-
-
-
-     csvData += '--------Non Tracked API------'  + "\r\n";
-
-
-
-nonParsedApis.forEach((value: number, key: string) => {
-       csvData += key + ',' + value + "\r\n";
-});
-
-  var blob = new Blob([csvData], { type: 'text/csv' });
-  var url = window.URL.createObjectURL(blob);
-
-  if(navigator.msSaveOrOpenBlob) {
-    navigator.msSaveBlob(blob, 'download_report.csv');
-  } else {
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = 'download_report.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-  window.URL.revokeObjectURL(url);
-} 
-downloader() ;
+          if (navigator.msSaveOrOpenBlob) {
+            navigator.msSaveBlob(blob, "download_report.csv");
+          } else {
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = "download_report.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }
+          window.URL.revokeObjectURL(url);
+        };
+        downloader();
       };
 
       reader.readAsText(file);
