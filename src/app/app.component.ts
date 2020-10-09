@@ -17,6 +17,10 @@ export class AppComponent {
   handleGroupeChange = (evt) => {
     this.userSelectionGrouped = evt.target.checked ;
   }
+  resetFileName = (evt) => {
+  evt.target.value = null ;
+
+  }
 
   handleFileInput = (event) => {
     var self = this ;
@@ -55,9 +59,12 @@ export class AppComponent {
                // var downloadAll = document.getElementById('onlyAPI') ;
                 var downloadGrouped = document.getElementById('groupedAPI') ;
                 //var grouped = downloadGrouped.getAttribute('checked') ;
+
+                if(self.userSelectionGrouped)
+                {
                 switch (postJData.method) {
                   case "updatePrice" :
-                  case "updateCartLineItems" && self.userSelectionGrouped: {
+                  case "updateCartLineItems" : {
                     if (parsedApis.get("Pricing") == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];
@@ -81,7 +88,7 @@ export class AppComponent {
                     }
                     break;
                   }
-                  case "addToCart" && self.userSelectionGrouped: {
+                  case "addToCart" : {
                     if (parsedApis.get("AddToCart") == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];
@@ -128,6 +135,30 @@ export class AppComponent {
                     break;
                   }
                 }
+              }
+              else if(self.userSelectionOnlyAPI === true)
+              {
+                  if (nonParsedApis.get(postJData.method) == null) {
+                      if (entry.time != null) {
+                        let recTime: [number, number];
+                        recTime = [entry.time, 1];
+                        nonParsedApis.set(postJData.method, recTime);
+                      }
+                    } else {
+                      if (entry.time != null) {
+                        let recTime = nonParsedApis.get(postJData.method);
+                        let p1 = recTime[0];
+                        p1 += entry.time;
+
+                        let p2 = recTime[1];
+                        p2++;
+                        recTime = [p1, p2];
+                        nonParsedApis.set(postJData.method, recTime);
+                      }
+                    }
+
+              }
+
               }
             }
           }
@@ -179,6 +210,7 @@ export class AppComponent {
       };
 
       reader.readAsText(file);
+    
     }
   }
 }

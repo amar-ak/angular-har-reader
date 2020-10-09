@@ -11,7 +11,7 @@
    <br>
   <label for="file">Upload HAR</label> <br>
     <input type="file"
-           id="file"
+           id="file" (click)="this.resetFileName($event)"
            (change)="this.handleFileInput($event)"/>
          
     
