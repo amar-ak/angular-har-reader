@@ -1,4 +1,5 @@
-import { Component, VERSION } from "@angular/core";
+import { Component, Input,  VERSION } from "@angular/core";
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: "my-app",
@@ -7,9 +8,18 @@ import { Component, VERSION } from "@angular/core";
 })
 export class AppComponent {
   name = "Har Parser " + "0.01";
-
+  userSelectionOnlyAPI : boolean = true ;
+  userSelectionGrouped : boolean  = false  ;
   fileToUpload: File = null;
-  handleFileInput(event) {
+  handleOnlyAPIChange = (evt) => {
+    this.handleOnlyAPIChange = evt.target.checked ;
+  }
+  handleGroupeChange = (evt) => {
+    this.userSelectionGrouped = evt.target.checked ;
+  }
+
+  handleFileInput = (event) => {
+    var self = this ;
     let fileList: FileList = event.target.files;
     let apiList: String[] = ["updatePrice", "updateCartLineItems"];
     if (fileList.length > 0) {
@@ -17,7 +27,8 @@ export class AppComponent {
 
       let reader = new FileReader();
 
-      reader.onload = function(e) {
+      reader.onload = (e) => {
+        var self = this ;
         let csvToUse;
         let parsedApis = new Map();
         let nonParsedApis = new Map();
@@ -32,7 +43,7 @@ export class AppComponent {
           function search(payLoad) {
             for (let entry of payLoad) {
               if (
-                entry.request.method != "GET" &&
+                entry.request.method == "POST" &&
                 entry.request.postData !== null
               ) {
                 let apiInLoad = entry.request.postData.text;
@@ -41,9 +52,12 @@ export class AppComponent {
                 let postJData = JSON.parse(apiInLoad);
                 //  debugger ;
                 console.log("Method :" + postJData.method);
+               // var downloadAll = document.getElementById('onlyAPI') ;
+                var downloadGrouped = document.getElementById('groupedAPI') ;
+                //var grouped = downloadGrouped.getAttribute('checked') ;
                 switch (postJData.method) {
-                  case "updatePrice":
-                  case "updateCartLineItems": {
+                  case "updatePrice" :
+                  case "updateCartLineItems" && self.userSelectionGrouped: {
                     if (parsedApis.get("Pricing") == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];
@@ -67,7 +81,7 @@ export class AppComponent {
                     }
                     break;
                   }
-                  case "addToCart": {
+                  case "addToCart" && self.userSelectionGrouped: {
                     if (parsedApis.get("AddToCart") == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];

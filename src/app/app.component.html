@@ -1,9 +1,19 @@
+
 <b>{{ name }}</b>
 <br>
 <br>
  <div class="form-group">
-    <label for="file">Upload HAR</label>
+   <input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
+   <label >Download API Data</label><br>
+   <input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionGrouped" (change) = "handleGroupeChange($event)" />
+   <label >Download Action Data</label><br>
+   <br>
+   <br>
+  <label for="file">Upload HAR</label> <br>
     <input type="file"
            id="file"
-           (change)="handleFileInput($event)"/>
+           (change)="this.handleFileInput($event)"/>
+         
+    
 </div>
+
