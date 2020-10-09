@@ -12,13 +12,19 @@ export class AppComponent {
   userSelectionGrouped : boolean  = false  ;
   fileToUpload: File = null;
   handleOnlyAPIChange = (evt) => {
-    this.handleOnlyAPIChange = evt.target.checked ;
+    this.userSelectionOnlyAPI = evt.target.checked ;
+    this.userSelectionGrouped = false ;
   }
   handleGroupeChange = (evt) => {
     this.userSelectionGrouped = evt.target.checked ;
+    this.userSelectionOnlyAPI = false ;
   }
   resetFileName = (evt) => {
-  evt.target.value = null ;
+
+  //reset
+
+    evt.target.value = null ;
+   
 
   }
 
@@ -210,7 +216,7 @@ export class AppComponent {
       };
 
       reader.readAsText(file);
-    
+
     }
   }
 }
