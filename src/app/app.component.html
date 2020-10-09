@@ -4,10 +4,9 @@
 <br>
  <div class="form-group">
    <input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
-   <label >Download API Data</label><br>
+   <label >Download Flat API Data</label><br>
    <input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionGrouped" (change) = "handleGroupeChange($event)" />
-   <label >Download Action Data</label><br>
-   <br>
+   <label >Download Grouped Data</label><br>
    <br>
   <label for="file">Upload HAR</label> <br>
     <input type="file"
