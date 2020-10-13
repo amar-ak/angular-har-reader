@@ -102,7 +102,7 @@ export class AppComponent {
                 if(postJData.method == "performAction" )
                   {
 
-                    if(entry.request.data != null && entry.request.data[0] != null && entry.request.data[0].displayAction.ActionLabelName == "Add Marker")
+                    if(postJData.data != null && postJData.data[0] != null && postJData.data[0].displayAction.ActionLabelName == "Add Marker")
                     {
                         parsedApis = new Map () ;
                         nonParsedApis = new Map() ;
@@ -174,7 +174,7 @@ export class AppComponent {
             "," +
             "Total Calls" +
             "\r\n";
-
+  csvData += "" + "," + "," + "\r\n";
           allData.forEach((value: [Map<string,[number,number]>,Map<string,[number,number]>], key: string) => {
                   csvData += key + "," + "," + "\r\n";
                   value[0].forEach((value: [number, number], key: string) => {
@@ -185,6 +185,7 @@ export class AppComponent {
                 value[1].forEach((value: [number, number], key: string) => {
                   csvData += key + "," + value[0] + "," + value[1] + "\r\n";
                 });
+                  csvData += "" + "," + "," + "\r\n";
               });
 
       
