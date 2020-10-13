@@ -198,6 +198,8 @@ export class AppComponent {
           let csvData: string = "";
 
           csvData +=
+            "ActionGroup" +
+            "," +
             "Action Name" +
             "," +
             "Total time (ms)" +
@@ -206,16 +208,16 @@ export class AppComponent {
             "\r\n";
   csvData += "" + "," + "," + "\r\n";
           allData.forEach((value: [Map<string,[number,number]>,Map<string,[number,number]>], key: string) => {
-                  csvData += key + "," + "," + "\r\n";
-                  value[0].forEach((value: [number, number], key: string) => {
-                  csvData += key + "," + value[0] + "," + value[1] + "\r\n";
+                  csvData += key +"," + "," + "," + "\r\n";
+                  value[0].forEach((value: [number, number], keyInner: string) => {
+                  csvData += key + ","+  keyInner + "," + value[0] + "," + value[1] + "\r\n";
                 });
-                csvData += "--------Non Grouped API------"+ "," + "," + "\r\n";
+                csvData += "--------Non Grouped API------"+","+ "," + "," + "\r\n";
 
-                value[1].forEach((value: [number, number], key: string) => {
-                  csvData += key + "," + value[0] + "," + value[1] + "\r\n";
+                value[1].forEach((value: [number, number], keyInner: string) => {
+                  csvData += key + "," + keyInner + "," + value[0] + "," + value[1] + "\r\n";
                 });
-                  csvData += "" + "," + "," + "\r\n";
+                  csvData += ""+ "," + "," + "," + "\r\n";
               });
 
       
