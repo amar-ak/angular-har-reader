@@ -91,9 +91,14 @@ export class AppComponent {
               ) {
                 let apiInLoad = entry.request.postData.text;
               
-                //convert this json string to json
-                let postJData = JSON.parse(apiInLoad);
-
+                let postJData ;
+               try {
+                      postJData = JSON.parse(apiInLoad);
+                  } 
+                  catch (e) {
+                      continue;
+                  }
+             
                 if(postJData.method == "performAction" )
                   {
 
