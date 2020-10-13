@@ -51,6 +51,33 @@ export class AppComponent {
         let flatten = function(data) {
           var result = {};
           function search(payLoad) {
+
+            let addtoList = function(category,req,parsedOrNot )
+            {
+              var setter = parsedOrNot ? parsedApis : nonParsedApis ;
+              if (setter.get(category) == null) {
+                      if (req.time != null) {
+                        let recTime: [number, number];
+                        recTime = [req.time, 1];
+                        setter.set(category, recTime);
+                      }
+                    } else {
+                      //get the value to add
+
+                      if (req.time != null) {
+                        let recTime = setter.get(category);
+                        let p1 = recTime[0];
+                        p1 += req.time;
+
+                        let p2 = recTime[1];
+                        p2++;
+                        recTime = [p1, p2];
+
+                        setter.set(category, recTime);
+                      }
+                    }
+
+            }
             for (let entry of payLoad) {
               if (
                 entry.request.method == "POST" &&
@@ -71,7 +98,8 @@ export class AppComponent {
                 switch (postJData.method) {
                   case "updatePrice" :
                   case "updateCartLineItems" : {
-                    if (parsedApis.get("Pricing") == null) {
+                    addtoList("Pricing", entry,true) ;
+                    /*if (parsedApis.get("Pricing") == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];
                         recTime = [entry.time, 1];
@@ -91,10 +119,20 @@ export class AppComponent {
 
                         parsedApis.set("Pricing", recTime);
                       }
-                    }
+                    }*/
                     break;
                   }
-                  case "addToCart" : {
+                  case "getGuidePageUrl":
+                  case "getCategories":
+                  {
+                      addtoList("LaunchCatalog", entry,true) ;
+                    
+                  }
+                  case "addToCart" : 
+                   {
+                     addtoList("AddToCart", entry,true) ;
+                    
+                     /*
                     if (parsedApis.get("AddToCart") == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];
@@ -115,11 +153,13 @@ export class AppComponent {
 
                         parsedApis.set("AddToCart", recTime);
                       }
-                    }
+                    }*/
                     break;
                   }
 
                   default: {
+                    addtoList(postJData.method,entry,false) ;
+                    /*
                     if (nonParsedApis.get(postJData.method) == null) {
                       if (entry.time != null) {
                         let recTime: [number, number];
@@ -137,7 +177,7 @@ export class AppComponent {
                         recTime = [p1, p2];
                         nonParsedApis.set(postJData.method, recTime);
                       }
-                    }
+                    }*/
                     break;
                   }
                 }
