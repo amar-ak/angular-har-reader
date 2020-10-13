@@ -132,6 +132,7 @@ export class AppComponent {
                       addtoList("LaunchCatalog", entry,true) ;
                     
                   }
+                  
                   case "addToCart" : 
                    {
                      addtoList("AddToCart", entry,true) ;
@@ -139,8 +140,37 @@ export class AppComponent {
                     break;
                   }
 
+                  case "searchProducts" : 
+                  case "getConfigurationData" : 
+                  {
+                     addtoList("SearchProducts", entry,true) ;
+                 
+                    break;
+                  }
+
+                  case "getDefaultLineItemRollup" : 
+                  case "getCart" : 
+                  case "getCartLineNumbers" : 
+                  case "getLineItemFieldsMetaData" : 
+                  case "getSObjectPermissions" : 
+                  case "getAllCartViews" : 
+                  case "getObjectForSummary" : 
+                  case "getAnalyticsRecommendedProducts" : 
+                  case "getReferenceObjects" : 
+                  case "getCartLineItems" : 
+                  case "getChildCartLineItems" : 
+                  case "getProductDetails" : 
+                   {
+                     addtoList("CartLaunch", entry,true) ;
+                 
+                    break;
+                  }
               
                   default: {
+
+                    let methodCalled ; 
+                    if(postJData.method == "performAction")
+                      methodCalled
                     addtoList(postJData.method,entry,false) ;
               
                     break;
@@ -180,7 +210,7 @@ export class AppComponent {
                   value[0].forEach((value: [number, number], key: string) => {
                   csvData += key + "," + value[0] + "," + value[1] + "\r\n";
                 });
-                csvData += "--------Non Tracked API------"+ "," + "," + "\r\n";
+                csvData += "--------Non Grouped API------"+ "," + "," + "\r\n";
 
                 value[1].forEach((value: [number, number], key: string) => {
                   csvData += key + "," + value[0] + "," + value[1] + "\r\n";
