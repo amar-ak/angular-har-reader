@@ -99,27 +99,6 @@ export class AppComponent {
                   case "updatePrice" :
                   case "updateCartLineItems" : {
                     addtoList("Pricing", entry,true) ;
-                    /*if (parsedApis.get("Pricing") == null) {
-                      if (entry.time != null) {
-                        let recTime: [number, number];
-                        recTime = [entry.time, 1];
-                        parsedApis.set("Pricing", recTime);
-                      }
-                    } else {
-                      //get the value to add
-
-                      if (entry.time != null) {
-                        let recTime = parsedApis.get("Pricing");
-                        let p1 = recTime[0];
-                        p1 += entry.time;
-
-                        let p2 = recTime[1];
-                        p2++;
-                        recTime = [p1, p2];
-
-                        parsedApis.set("Pricing", recTime);
-                      }
-                    }*/
                     break;
                   }
                   case "getGuidePageUrl":
@@ -132,76 +111,20 @@ export class AppComponent {
                    {
                      addtoList("AddToCart", entry,true) ;
                     
-                     /*
-                    if (parsedApis.get("AddToCart") == null) {
-                      if (entry.time != null) {
-                        let recTime: [number, number];
-                        recTime = [entry.time, 1];
-                        parsedApis.set("AddToCart", recTime);
-                      }
-                    } else {
-                      //get the value to add
-
-                      if (entry.time != null) {
-                        let recTime = parsedApis.get("AddToCart");
-                        let p1 = recTime[0];
-                        p1 += entry.time;
-
-                        let p2 = recTime[1];
-                        p2++;
-                        recTime = [p1, p2];
-
-                        parsedApis.set("AddToCart", recTime);
-                      }
-                    }*/
+                 
                     break;
                   }
 
                   default: {
                     addtoList(postJData.method,entry,false) ;
-                    /*
-                    if (nonParsedApis.get(postJData.method) == null) {
-                      if (entry.time != null) {
-                        let recTime: [number, number];
-                        recTime = [entry.time, 1];
-                        nonParsedApis.set(postJData.method, recTime);
-                      }
-                    } else {
-                      if (entry.time != null) {
-                        let recTime = nonParsedApis.get(postJData.method);
-                        let p1 = recTime[0];
-                        p1 += entry.time;
-
-                        let p2 = recTime[1];
-                        p2++;
-                        recTime = [p1, p2];
-                        nonParsedApis.set(postJData.method, recTime);
-                      }
-                    }*/
+              
                     break;
                   }
                 }
               }
               else if(self.userSelectionOnlyAPI === true)
               {
-                  if (nonParsedApis.get(postJData.method) == null) {
-                      if (entry.time != null) {
-                        let recTime: [number, number];
-                        recTime = [entry.time, 1];
-                        nonParsedApis.set(postJData.method, recTime);
-                      }
-                    } else {
-                      if (entry.time != null) {
-                        let recTime = nonParsedApis.get(postJData.method);
-                        let p1 = recTime[0];
-                        p1 += entry.time;
-
-                        let p2 = recTime[1];
-                        p2++;
-                        recTime = [p1, p2];
-                        nonParsedApis.set(postJData.method, recTime);
-                      }
-                    }
+                   addtoList(postJData.method,entry,false) ;
 
               }
 
