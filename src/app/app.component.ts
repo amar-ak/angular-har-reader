@@ -42,7 +42,9 @@ export class AppComponent {
         let csvToUse;
         let parsedApis = new Map();
         let nonParsedApis = new Map();
-
+        let allData = new Map();
+        let superMap : [Map<string,[number,number]>,Map<string,[number,number]>];
+       
         var jsonDt = JSON.parse(e.target.result.toString());
         // console.log(jsonDt) ;
         var jsonObj = jsonDt.log.entries;
@@ -78,15 +80,33 @@ export class AppComponent {
                     }
 
             }
+            let i = 1 ;
+            superMap  = [parsedApis,nonParsedApis] ;
+            allData.set("Action" + i++,superMap) ;
+            
             for (let entry of payLoad) {
               if (
                 entry.request.method == "POST" &&
                 entry.request.postData !== null
               ) {
                 let apiInLoad = entry.request.postData.text;
-
+              
                 //convert this json string to json
                 let postJData = JSON.parse(apiInLoad);
+
+                if(postJData.method == "performAction" )
+                  {
+
+                    if(entry.request.data != null && entry.request.data[0] != null && entry.request.data[0].displayAction.ActionLabelName == "Add Marker")
+                    {
+                        parsedApis = new Map () ;
+                        nonParsedApis = new Map() ;
+                        let superMap : [Map<string,[number,number]>,Map<string,[number,number]>];
+                        superMap = [parsedApis,nonParsedApis] ;
+                        allData.set("Action" + i++,superMap) ;
+
+                    }
+                  }
                 //  debugger ;
                 console.log("Method :" + postJData.method);
                // var downloadAll = document.getElementById('onlyAPI') ;
@@ -110,11 +130,11 @@ export class AppComponent {
                   case "addToCart" : 
                    {
                      addtoList("AddToCart", entry,true) ;
-                    
                  
                     break;
                   }
 
+              
                   default: {
                     addtoList(postJData.method,entry,false) ;
               
@@ -150,16 +170,25 @@ export class AppComponent {
             "Total Calls" +
             "\r\n";
 
-          parsedApis.forEach((value: [number, number], key: string) => {
-            csvData += key + "," + value[0] + "," + value[1] + "\r\n";
-          });
+          allData.forEach((value: [Map<string,[number,number]>,Map<string,[number,number]>], key: string) => {
+                  csvData += key + "," + "," + "\r\n";
+                  value[0].forEach((value: [number, number], key: string) => {
+                  csvData += key + "," + value[0] + "," + value[1] + "\r\n";
+                });
+                csvData += "--------Non Tracked API------"+ "," + "," + "\r\n";
 
-          csvData += "--------Non Tracked API------" + "\r\n";
+                value[1].forEach((value: [number, number], key: string) => {
+                  csvData += key + "," + value[0] + "," + value[1] + "\r\n";
+                });
+              });
+
+      
+         /* csvData += "--------Non Tracked API------" + "\r\n";
 
           nonParsedApis.forEach((value: [number, number], key: string) => {
             csvData += key + "," + value[0] + "," + value[1] + "\r\n";
           });
-
+*/
           var blob = new Blob([csvData], { type: "text/csv" });
           var url = window.URL.createObjectURL(blob);
 
