@@ -1,5 +1,5 @@
-import { Component, Input,  VERSION } from "@angular/core";
-import { FormControl } from '@angular/forms';
+import { Component, Input, VERSION } from "@angular/core";
+import { FormControl } from "@angular/forms";
 
 @Component({
   selector: "my-app",
@@ -7,29 +7,26 @@ import { FormControl } from '@angular/forms';
   styleUrls: ["./app.component.css"]
 })
 export class AppComponent {
-  name = "Har Parser " + "0.01";
-  userSelectionOnlyAPI : boolean = true ;
-  userSelectionGrouped : boolean  = false  ;
+  name = "CPQ API Analyzer " + "0.1";
+  userSelectionOnlyAPI: boolean = true;
+  userSelectionGrouped: boolean = false;
   fileToUpload: File = null;
-  handleOnlyAPIChange = (evt) => {
-    this.userSelectionOnlyAPI = evt.target.checked ;
-    this.userSelectionGrouped = false ;
-  }
-  handleGroupeChange = (evt) => {
-    this.userSelectionGrouped = evt.target.checked ;
-    this.userSelectionOnlyAPI = false ;
-  }
-  resetFileName = (evt) => {
+  handleOnlyAPIChange = evt => {
+    this.userSelectionOnlyAPI = evt.target.checked;
+    this.userSelectionGrouped = false;
+  };
+  handleGroupeChange = evt => {
+    this.userSelectionGrouped = evt.target.checked;
+    this.userSelectionOnlyAPI = false;
+  };
+  resetFileName = evt => {
+    //reset
 
-  //reset
+    evt.target.value = null;
+  };
 
-    evt.target.value = null ;
-   
-
-  }
-
-  handleFileInput = (event) => {
-    var self = this ;
+  handleFileInput = event => {
+    var self = this;
     let fileList: FileList = event.target.files;
     let apiList: String[] = ["updatePrice", "updateCartLineItems"];
     if (fileList.length > 0) {
@@ -37,14 +34,17 @@ export class AppComponent {
 
       let reader = new FileReader();
 
-      reader.onload = (e) => {
-        var self = this ;
+      reader.onload = e => {
+        var self = this;
         let csvToUse;
         let parsedApis = new Map();
         let nonParsedApis = new Map();
         let allData = new Map();
-        let superMap : [Map<string,[number,number]>,Map<string,[number,number]>];
-       
+        let superMap: [
+          Map<string, [number, number]>,
+          Map<string, [number, number]>
+        ];
+
         var jsonDt = JSON.parse(e.target.result.toString());
         // console.log(jsonDt) ;
         var jsonObj = jsonDt.log.entries;
@@ -53,136 +53,124 @@ export class AppComponent {
         let flatten = function(data) {
           var result = {};
           function search(payLoad) {
-
-            let addtoList = function(category,req,parsedOrNot )
-            {
-              var setter = parsedOrNot ? parsedApis : nonParsedApis ;
+            let addtoList = function(category, req, parsedOrNot) {
+              var setter = parsedOrNot ? parsedApis : nonParsedApis;
               if (setter.get(category) == null) {
-                      if (req.time != null) {
-                        let recTime: [number, number];
-                        recTime = [req.time, 1];
-                        setter.set(category, recTime);
-                      }
-                    } else {
-                      //get the value to add
+                if (req.time != null) {
+                  let recTime: [number, number];
+                  recTime = [req.time, 1];
+                  setter.set(category, recTime);
+                }
+              } else {
+                //get the value to add
 
-                      if (req.time != null) {
-                        let recTime = setter.get(category);
-                        let p1 = recTime[0];
-                        p1 += req.time;
+                if (req.time != null) {
+                  let recTime = setter.get(category);
+                  let p1 = recTime[0];
+                  p1 += req.time;
 
-                        let p2 = recTime[1];
-                        p2++;
-                        recTime = [p1, p2];
+                  let p2 = recTime[1];
+                  p2++;
+                  recTime = [p1, p2];
 
-                        setter.set(category, recTime);
-                      }
-                    }
+                  setter.set(category, recTime);
+                }
+              }
+            };
+            let i = 1;
+            superMap = [parsedApis, nonParsedApis];
+            allData.set("Action" + i++, superMap);
 
-            }
-            let i = 1 ;
-            superMap  = [parsedApis,nonParsedApis] ;
-            allData.set("Action" + i++,superMap) ;
-            
             for (let entry of payLoad) {
               if (
                 entry.request.method == "POST" &&
                 entry.request.postData !== null
               ) {
                 let apiInLoad = entry.request.postData.text;
-              
-                let postJData ;
-               try {
-                      postJData = JSON.parse(apiInLoad);
-                  } 
-                  catch (e) {
-                      continue;
-                  }
-             
-                if(postJData.method == "performAction" )
-                  {
 
-                    if(postJData.data != null && postJData.data[0] != null && postJData.data[0].displayAction.ActionLabelName == "Add Marker")
-                    {
-                        parsedApis = new Map () ;
-                        nonParsedApis = new Map() ;
-                        let superMap : [Map<string,[number,number]>,Map<string,[number,number]>];
-                        superMap = [parsedApis,nonParsedApis] ;
-                        allData.set("Action" + i++,superMap) ;
+                let postJData;
+                try {
+                  postJData = JSON.parse(apiInLoad);
+                } catch (e) {
+                  continue;
+                }
 
-                    }
-                  }
-                //  debugger ;
-                console.log("Method :" + postJData.method);
-               // var downloadAll = document.getElementById('onlyAPI') ;
-                var downloadGrouped = document.getElementById('groupedAPI') ;
-                //var grouped = downloadGrouped.getAttribute('checked') ;
-
-                if(self.userSelectionGrouped)
-                {
-                switch (postJData.method) {
-                  case "updatePrice" :
-                  case "updateCartLineItems" : {
-                    addtoList("Pricing", entry,true) ;
-                    break;
-                  }
-                  case "getGuidePageUrl":
-                  case "getCategories":
-                  {
-                      addtoList("LaunchCatalog", entry,true) ;
-                    
-                  }
-                  
-                  case "addToCart" : 
-                   {
-                     addtoList("AddToCart", entry,true) ;
-                 
-                    break;
-                  }
-
-                  case "searchProducts" : 
-                  case "getConfigurationData" : 
-                  {
-                     addtoList("SearchProducts", entry,true) ;
-                 
-                    break;
-                  }
-
-                  case "getDefaultLineItemRollup" : 
-                  case "getCart" : 
-                  case "getCartLineNumbers" : 
-                  case "getLineItemFieldsMetaData" : 
-                  case "getSObjectPermissions" : 
-                  case "getAllCartViews" : 
-                  case "getObjectForSummary" : 
-                  case "getAnalyticsRecommendedProducts" : 
-                  case "getReferenceObjects" : 
-                  case "getCartLineItems" : 
-                  case "getChildCartLineItems" : 
-                  case "getProductDetails" : 
-                   {
-                     addtoList("CartLaunch", entry,true) ;
-                 
-                    break;
-                  }
-              
-                  default: {
-
-                    let methodCalled ; 
-                    if(postJData.method == "performAction")
-                      methodCalled
-                    addtoList(postJData.method,entry,false) ;
-              
-                    break;
+                if (postJData.method == "performAction") {
+                  if (
+                    postJData.data != null &&
+                    postJData.data[0] != null &&
+                    postJData.data[0].displayAction.ActionLabelName ==
+                      "Add Marker"
+                  ) {
+                    parsedApis = new Map();
+                    nonParsedApis = new Map();
+                    let superMap: [
+                      Map<string, [number, number]>,
+                      Map<string, [number, number]>
+                    ];
+                    superMap = [parsedApis, nonParsedApis];
+                    allData.set("Action" + i++, superMap);
                   }
                 }
-              }
-              else if(self.userSelectionOnlyAPI === true)
-              {
-                   addtoList(postJData.method,entry,false) ;
+                //  debugger ;
+                console.log("Method :" + postJData.method);
+                // var downloadAll = document.getElementById('onlyAPI') ;
+                var downloadGrouped = document.getElementById("groupedAPI");
+                //var grouped = downloadGrouped.getAttribute('checked') ;
 
-              }
+                if (self.userSelectionGrouped) {
+                  switch (postJData.method) {
+                    case "updatePrice":
+                    case "updateCartLineItems": {
+                      addtoList("Pricing", entry, true);
+                      break;
+                    }
+                    case "getGuidePageUrl":
+                    case "getCategories": {
+                      addtoList("LaunchCatalog", entry, true);
+                    }
 
+                    case "addToCart": {
+                      addtoList("AddToCart", entry, true);
+
+                      break;
+                    }
+
+                    case "searchProducts":
+                    case "getConfigurationData": {
+                      addtoList("SearchProducts", entry, true);
+
+                      break;
+                    }
+
+                    case "getDefaultLineItemRollup":
+                    case "getCart":
+                    case "getCartLineNumbers":
+                    case "getLineItemFieldsMetaData":
+                    case "getSObjectPermissions":
+                    case "getAllCartViews":
+                    case "getObjectForSummary":
+                    case "getAnalyticsRecommendedProducts":
+                    case "getReferenceObjects":
+                    case "getCartLineItems":
+                    case "getChildCartLineItems":
+                    case "getProductDetails": {
+                      addtoList("CartLaunch", entry, true);
+
+                      break;
+                    }
+
+                    default: {
+                      let methodCalled;
+                      if (postJData.method == "performAction") methodCalled;
+                      addtoList(postJData.method, entry, false);
+
+                      break;
+                    }
+                  }
+                } else if (self.userSelectionOnlyAPI === true) {
+                  addtoList(postJData.method, entry, false);
+                }
               }
             }
           }
@@ -205,23 +193,58 @@ export class AppComponent {
             "Total time (ms)" +
             "," +
             "Total Calls" +
+            "," +
+            "Avg per call" +
             "\r\n";
-  csvData += "" + "," + "," + "\r\n";
-          allData.forEach((value: [Map<string,[number,number]>,Map<string,[number,number]>], key: string) => {
-                  csvData += key +"," + "," + "," + "\r\n";
-                  value[0].forEach((value: [number, number], keyInner: string) => {
-                  csvData += key + ","+  keyInner + "," + value[0] + "," + value[1] + "\r\n";
-                });
-                csvData += "--------Non Grouped API------"+","+ "," + "," + "\r\n";
-
-                value[1].forEach((value: [number, number], keyInner: string) => {
-                  csvData += key + "," + keyInner + "," + value[0] + "," + value[1] + "\r\n";
-                });
-                  csvData += ""+ "," + "," + "," + "\r\n";
+          csvData += "" + "," + "," + "," + "," + "\r\n";
+          allData.forEach(
+            (
+              value: [
+                Map<string, [number, number]>,
+                Map<string, [number, number]>
+              ],
+              key: string
+            ) => {
+              csvData += key + "," + "," + "," + "\r\n";
+              value[0].forEach((value: [number, number], keyInner: string) => {
+                csvData +=
+                  key +
+                  "," +
+                  keyInner +
+                  "," +
+                  value[0] +
+                  "," +
+                  value[1] +
+                  "," +
+                  value[0] / value[1] +
+                  "\r\n";
               });
+              csvData +=
+                "--------Non Grouped API------" +
+                "," +
+                "," +
+                "," +
+                "," +
+                "\r\n";
 
-      
-         /* csvData += "--------Non Tracked API------" + "\r\n";
+              value[1].forEach((value: [number, number], keyInner: string) => {
+                csvData +=
+                  key +
+                  "," +
+                  keyInner +
+                  "," +
+                  value[0] +
+                  "," +
+                  value[1] +
+                  "," +
+                  value[0] / value[1] +
+                  "\r\n";
+              });
+              csvData += "" + "," + "," + "," + "," + "\r\n";
+            }
+          );
+
+          /* csvData += "--------Non Tracked API------" + "\r\n";
 
           nonParsedApis.forEach((value: [number, number], key: string) => {
             csvData += key + "," + value[0] + "," + value[1] + "\r\n";
@@ -246,9 +269,8 @@ export class AppComponent {
       };
 
       reader.readAsText(file);
-
     }
-  }
+  };
 }
 
 /*   var recMap = function(obj) {
