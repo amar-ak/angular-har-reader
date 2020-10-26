@@ -2,14 +2,14 @@
 
 <div class="form-group">
 
-	<strong>Choose data detail level:</strong>
+	<strong>Choose detail level for download:</strong>
 	<br>
 	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionRawAPI" (change) = "handleRawApiChange($event)" />
-	<label >Download Raw API Data</label><br>
+	<label >Raw API Data</label><br>
 	<input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
-	<label >Download Grouped API Data</label><br>
+	<label >Grouped API Data</label><br>
 	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionGrouped" (change) = "handleGroupeChange($event)" />
-	<label >Download Action Grouped Data</label><br>
+	<label >Action Grouped Data</label><br>
 	<br>
 	<label for="file">Upload HAR</label> <br>
 	<input type="file"
