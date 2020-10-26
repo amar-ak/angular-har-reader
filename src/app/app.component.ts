@@ -8,20 +8,27 @@ import { FormControl } from "@angular/forms";
 })
 export class AppComponent {
   name = "CPQ API Analyzer " + "0.1";
-  userSelectionOnlyAPI: boolean = true;
+  userSelectionOnlyAPI: boolean = false;
   userSelectionGrouped: boolean = false;
+  userSelectionRawAPI: boolean = true;
   fileToUpload: File = null;
   handleOnlyAPIChange = evt => {
     this.userSelectionOnlyAPI = evt.target.checked;
     this.userSelectionGrouped = false;
+    this.userSelectionRawAPI = true;
   };
   handleGroupeChange = evt => {
     this.userSelectionGrouped = evt.target.checked;
     this.userSelectionOnlyAPI = false;
+    this.userSelectionRawAPI = true;
+  };
+  handleRawApiChange = evt => {
+    this.userSelectionRawAPI = evt.target.checked;
+    this.userSelectionOnlyAPI = false;
+    this.userSelectionGrouped = false;
   };
   resetFileName = evt => {
     //reset
-
     evt.target.value = null;
   };
 
@@ -39,6 +46,7 @@ export class AppComponent {
         let csvToUse;
         let parsedApis = new Map();
         let nonParsedApis = new Map();
+        let rawApis: [string,string, number][] = [];
         let allData = new Map();
         let superMap: [
           Map<string, [number, number]>,
@@ -51,36 +59,67 @@ export class AppComponent {
         //console.log(jsonObj) ;
 
         let flatten = function(data) {
+      
           var result = {};
           function search(payLoad) {
-            let addtoList = function(category, req, parsedOrNot) {
-              var setter = parsedOrNot ? parsedApis : nonParsedApis;
-              if (setter.get(category) == null) {
-                if (req.time != null) {
-                  let recTime: [number, number];
-                  recTime = [req.time, 1];
-                  setter.set(category, recTime);
+            let addtoList = function(action,category, req, parseStrategy) {
+              var setter;
+              switch (parseStrategy) {
+                case "Coarse": {
+                  setter = parsedApis;
+                  break;
+                }
+                case "Fine": {
+                  setter = nonParsedApis;
+                  break;
+                }
+                case "Raw": {
+                  setter = rawApis;
+                  break;
+                }
+                default: {
+                  setter = rawApis;
+                  break;
+                }
+              }
+
+              if (parseStrategy != "Raw") {
+                if (setter.get(category) == null) {
+                  if (req.time != null) {
+                    let recTime: [number, number];
+                    recTime = [req.time, 1];
+                    setter.set(category, recTime);
+                  }
+                } else {
+                  //get the value to add
+                  if (req.time != null) {
+                    let recTime = setter.get(category);
+                    let p1 = recTime[0];
+                    p1 += req.time;
+
+                    let p2 = recTime[1];
+                    p2++;
+                    recTime = [p1, p2];
+                    setter.set(category, recTime);
+                  }
                 }
               } else {
-                //get the value to add
-
-                if (req.time != null) {
-                  let recTime = setter.get(category);
-                  let p1 = recTime[0];
-                  p1 += req.time;
-
-                  let p2 = recTime[1];
-                  p2++;
-                  recTime = [p1, p2];
-
-                  setter.set(category, recTime);
-                }
+                let data = [action,category, req.time];
+                setter.push(data);
               }
             };
             let i = 1;
+            function addAction()
+            {
+              return "Action" + i++ ;
+            }
             superMap = [parsedApis, nonParsedApis];
-            allData.set("Action" + i++, superMap);
-
+            var action = addAction() ;
+            //for raw APIs
+            rawApis.push([action,null,null]);
+            
+            allData.set(action, superMap);
+           
             for (let entry of payLoad) {
               if (
                 entry.request.method == "POST" &&
@@ -109,7 +148,8 @@ export class AppComponent {
                       Map<string, [number, number]>
                     ];
                     superMap = [parsedApis, nonParsedApis];
-                    allData.set("Action" + i++, superMap);
+                    action = addAction() ;
+                    allData.set(action, superMap);
                   }
                 }
                 //  debugger ;
@@ -122,23 +162,23 @@ export class AppComponent {
                   switch (postJData.method) {
                     case "updatePrice":
                     case "updateCartLineItems": {
-                      addtoList("Pricing", entry, true);
+                      addtoList(action,"Pricing", entry, "Fine");
                       break;
                     }
                     case "getGuidePageUrl":
                     case "getCategories": {
-                      addtoList("LaunchCatalog", entry, true);
+                      addtoList(action,"LaunchCatalog", entry, "Fine");
                     }
 
                     case "addToCart": {
-                      addtoList("AddToCart", entry, true);
+                      addtoList(action,"AddToCart", entry, "Fine");
 
                       break;
                     }
 
                     case "searchProducts":
                     case "getConfigurationData": {
-                      addtoList("SearchProducts", entry, true);
+                      addtoList(action,"SearchProducts", entry, "Fine");
 
                       break;
                     }
@@ -155,21 +195,28 @@ export class AppComponent {
                     case "getCartLineItems":
                     case "getChildCartLineItems":
                     case "getProductDetails": {
-                      addtoList("CartLaunch", entry, true);
+                      addtoList(action,"CartLaunch", entry, "Fine");
 
                       break;
                     }
 
+                    case "getProductDetails": {
+                      addtoList(action,"CartLaunch", entry, "Fine");
+
+                      break;
+                    }
                     default: {
                       let methodCalled;
-                      if (postJData.method == "performAction") methodCalled;
-                      addtoList(postJData.method, entry, false);
+                      if (postJData.method == "performAction")
+                        addtoList(action,postJData.method, entry, "Fine");
 
                       break;
                     }
                   }
                 } else if (self.userSelectionOnlyAPI === true) {
-                  addtoList(postJData.method, entry, false);
+                  addtoList(action,postJData.method, entry, "Coarse");
+                } else if (self.userSelectionRawAPI === true) {
+                  addtoList(action,postJData.method, entry, "Raw");
                 }
               }
             }
@@ -181,6 +228,8 @@ export class AppComponent {
         let apiData = flatten(jsonObj);
         console.log("Tracked apiData" + JSON.stringify(apiData));
         console.log("Non grouped apiData" + JSON.stringify(nonParsedApis));
+        console.log("Non grouped raw apiData" + JSON.stringify(rawApis));
+
 
         let downloader = function downloadAsCSV() {
           let csvData: string = "";
@@ -190,13 +239,19 @@ export class AppComponent {
             "," +
             "Action Name" +
             "," +
-            "Total time (ms)" +
+            "Total Time (ms)" +
             "," +
             "Total Calls" +
             "," +
-            "Avg per call" +
+            "Avg Time Per Call" +
             "\r\n";
           csvData += "" + "," + "," + "," + "," + "\r\n";
+          if(self.userSelectionRawAPI === true)
+          {
+
+          }
+          else
+
           allData.forEach(
             (
               value: [
@@ -205,7 +260,7 @@ export class AppComponent {
               ],
               key: string
             ) => {
-              csvData += key + "," + "," + "," + "\r\n";
+              csvData += key + "," + "," + "," + "," + "\r\n";
               value[0].forEach((value: [number, number], keyInner: string) => {
                 csvData +=
                   key +

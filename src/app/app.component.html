@@ -1,18 +1,18 @@
-
 <b>{{ name }}</b>
 <br>
 <br>
- <div class="form-group">
-   <input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
-   <label >Download Flat API Data</label><br>
-   <input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionGrouped" (change) = "handleGroupeChange($event)" />
-   <label >Download Grouped Data</label><br>
-   <br>
-  <label for="file">Upload HAR</label> <br>
-    <input type="file"
+<div class="form-group">
+	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionRawAPI" (change) = "handleRawApiChange($event)" />
+	<label >Download Raw API Data</label><br>
+	<input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
+	<label >Download Grouped API Data</label><br>
+	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionGrouped" (change) = "handleGroupeChange($event)" />
+	<label >Download Action Grouped Data</label><br>
+	<br>
+	<label for="file">Upload HAR</label> <br>
+	<input type="file"
            id="file" (click)="this.resetFileName($event)"
            (change)="this.handleFileInput($event)"/>
-         
-    
-</div>
 
+
+</div>
