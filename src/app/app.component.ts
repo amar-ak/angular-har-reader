@@ -11,16 +11,17 @@ export class AppComponent {
   userSelectionOnlyAPI: boolean = false;
   userSelectionGrouped: boolean = false;
   userSelectionRawAPI: boolean = true;
+
   fileToUpload: File = null;
   handleOnlyAPIChange = evt => {
     this.userSelectionOnlyAPI = evt.target.checked;
     this.userSelectionGrouped = false;
-    this.userSelectionRawAPI = true;
+    this.userSelectionRawAPI = false;
   };
   handleGroupeChange = evt => {
     this.userSelectionGrouped = evt.target.checked;
     this.userSelectionOnlyAPI = false;
-    this.userSelectionRawAPI = true;
+    this.userSelectionRawAPI = false;
   };
   handleRawApiChange = evt => {
     this.userSelectionRawAPI = evt.target.checked;
@@ -83,7 +84,7 @@ export class AppComponent {
                 }
               }
 
-              if (parseStrategy != "Raw") {
+              if (parseStrategy !== "Raw") {
                 if (setter.get(category) == null) {
                   if (req.time != null) {
                     let recTime: [number, number];
@@ -116,7 +117,7 @@ export class AppComponent {
             superMap = [parsedApis, nonParsedApis];
             var action = addAction() ;
             //for raw APIs
-            rawApis.push([action,null,null]);
+            rawApis.push([action,'',0]);
             
             allData.set(action, superMap);
            
@@ -248,10 +249,24 @@ export class AppComponent {
           csvData += "" + "," + "," + "," + "," + "\r\n";
           if(self.userSelectionRawAPI === true)
           {
+              rawApis.forEach((value:[string,string,number]) =>
+              {
+                    csvData +=
+                  value[0] +
+                  "," +
+                  value[1] +
+                  "," +
+                  value[2] +
+                  "," +
+                  1 +
+                  "," +
+                  value[2] +
+                  "\r\n";
 
+              });
           }
           else
-
+        {
           allData.forEach(
             (
               value: [
@@ -298,7 +313,7 @@ export class AppComponent {
               csvData += "" + "," + "," + "," + "," + "\r\n";
             }
           );
-
+        }
           /* csvData += "--------Non Tracked API------" + "\r\n";
 
           nonParsedApis.forEach((value: [number, number], key: string) => {

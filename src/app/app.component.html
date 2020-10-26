@@ -1,7 +1,9 @@
-<b>{{ name }}</b>
-<br>
-<br>
+<h2>{{ name }}</h2>
+
 <div class="form-group">
+
+	<strong>Choose data detail level:</strong>
+	<br>
 	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionRawAPI" (change) = "handleRawApiChange($event)" />
 	<label >Download Raw API Data</label><br>
 	<input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
