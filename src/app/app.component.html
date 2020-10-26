@@ -5,11 +5,11 @@
 	<strong>Choose Download Detail Level:</strong>
 	<br>
 	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionRawAPI" (change) = "handleRawApiChange($event)" />
-	<label >Raw API Data</label><br>
+	<label title="This option will download the most simple  format of the dat API call data(no added processing)" >Raw API Data</label><br>
 	<input type="radio" id="onlyAPI" name="selectionInfo"  [checked]="userSelectionOnlyAPI" (change) = "handleOnlyAPIChange($event)" />
-	<label >Grouped API Data</label><br>
+	<label title="This option will club muliple calls of the same API within an action and provide more fine data (some processing)" >Grouped API Data</label><br>
 	<input type="radio"  id="groupedAPI"  name="selectionInfo" [checked]= "userSelectionGrouped" (change) = "handleGroupeChange($event)" />
-	<label >Action Grouped Data</label><br>
+	<label title = "This option will process data at use action level e.g Pricing, Finalize etc(most processed data)">Action Grouped Data</label><br>
 	<br>
 	<label for="file">Upload HAR</label> <br>
 	<input type="file"
