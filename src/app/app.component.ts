@@ -47,7 +47,7 @@ export class AppComponent {
         let csvToUse;
         let parsedApis = new Map();
         let nonParsedApis = new Map();
-        let rawApis: [string,string, number][] = [];
+        let rawApis: [string, string, number][] = [];
         let allData = new Map();
         let superMap: [
           Map<string, [number, number]>,
@@ -60,10 +60,9 @@ export class AppComponent {
         //console.log(jsonObj) ;
 
         let flatten = function(data) {
-      
           var result = {};
           function search(payLoad) {
-            let addtoList = function(action,category, req, parseStrategy) {
+            let addtoList = function(action, category, req, parseStrategy) {
               var setter;
               switch (parseStrategy) {
                 case "Coarse": {
@@ -71,7 +70,7 @@ export class AppComponent {
                   break;
                 }
                 case "Fine": {
-                  setter = nonParsedApis;
+                  setter = parsedApis;
                   break;
                 }
                 case "Raw": {
@@ -105,26 +104,42 @@ export class AppComponent {
                   }
                 }
               } else {
-                let data = [action,category, req.time];
+                let data = [action, category, req.time];
                 setter.push(data);
               }
             };
             let i = 1;
-            function addAction()
-            {
-              return "Action" + i++ ;
+            function addAction() {
+              return "Action" + i++;
+            }
+
+            function initializeMaps() {
+              parsedApis = new Map();
+              nonParsedApis = new Map();
+              let superMap: [
+                Map<string, [number, number]>,
+                Map<string, [number, number]>
+              ];
+              superMap = [parsedApis, nonParsedApis];
+              action = addAction();
+              allData.set(action, superMap);
             }
             superMap = [parsedApis, nonParsedApis];
-            var action = addAction() ;
+            var action = addAction();
             //for raw APIs
-            rawApis.push([action,'',0]);
-            
+            rawApis.push([action, "", 0]);
+
             allData.set(action, superMap);
-           
+
             for (let entry of payLoad) {
               if (
                 entry.request.method == "POST" &&
-                entry.request.postData !== null
+                entry.request.postData !== null &&
+                !(
+                  (entry.request.postData.text != null &&
+                    entry.request.postData.text.includes("long-polling")) ||
+                  entry.request.url.includes("cometd/24.0/")
+                )
               ) {
                 let apiInLoad = entry.request.postData.text;
 
@@ -139,18 +154,12 @@ export class AppComponent {
                   if (
                     postJData.data != null &&
                     postJData.data[0] != null &&
-                    postJData.data[0].displayAction.ActionLabelName ==
-                      "Add Marker"
+                    ((postJData.data[0].displayAction != null &&
+                      postJData.data[0].displayAction.ActionLabelName ==
+                        "Add Marker") ||
+                      superMap.entries.length == 0)
                   ) {
-                    parsedApis = new Map();
-                    nonParsedApis = new Map();
-                    let superMap: [
-                      Map<string, [number, number]>,
-                      Map<string, [number, number]>
-                    ];
-                    superMap = [parsedApis, nonParsedApis];
-                    action = addAction() ;
-                    allData.set(action, superMap);
+                    initializeMaps();
                   }
                 }
                 //  debugger ;
@@ -159,65 +168,63 @@ export class AppComponent {
                 var downloadGrouped = document.getElementById("groupedAPI");
                 //var grouped = downloadGrouped.getAttribute('checked') ;
 
-                if (self.userSelectionGrouped) {
-                  switch (postJData.method) {
-                    case "updatePrice":
-                    case "updateCartLineItems": {
-                      addtoList(action,"Pricing", entry, "Fine");
-                      break;
-                    }
-                    case "getGuidePageUrl":
-                    case "getCategories": {
-                      addtoList(action,"LaunchCatalog", entry, "Fine");
-                    }
+                let refineLevel;
+                if (self.userSelectionGrouped) refineLevel = "Fine";
+                else if (self.userSelectionOnlyAPI) refineLevel = "Coarse";
+                else if (self.userSelectionRawAPI === true) refineLevel = "Raw";
 
-                    case "addToCart": {
-                      addtoList(action,"AddToCart", entry, "Fine");
-
-                      break;
-                    }
-
-                    case "searchProducts":
-                    case "getConfigurationData": {
-                      addtoList(action,"SearchProducts", entry, "Fine");
-
-                      break;
-                    }
-
-                    case "getDefaultLineItemRollup":
-                    case "getCart":
-                    case "getCartLineNumbers":
-                    case "getLineItemFieldsMetaData":
-                    case "getSObjectPermissions":
-                    case "getAllCartViews":
-                    case "getObjectForSummary":
-                    case "getAnalyticsRecommendedProducts":
-                    case "getReferenceObjects":
-                    case "getCartLineItems":
-                    case "getChildCartLineItems":
-                    case "getProductDetails": {
-                      addtoList(action,"CartLaunch", entry, "Fine");
-
-                      break;
-                    }
-
-                    case "getProductDetails": {
-                      addtoList(action,"CartLaunch", entry, "Fine");
-
-                      break;
-                    }
-                    default: {
-                      let methodCalled;
-                      if (postJData.method == "performAction")
-                        addtoList(action,postJData.method, entry, "Fine");
-
-                      break;
-                    }
+                switch (postJData.method) {
+                  case "updatePrice":
+                  case "updateCartLineItems": {
+                    addtoList(action, "Pricing", entry, refineLevel);
+                    break;
                   }
-                } else if (self.userSelectionOnlyAPI === true) {
-                  addtoList(action,postJData.method, entry, "Coarse");
-                } else if (self.userSelectionRawAPI === true) {
-                  addtoList(action,postJData.method, entry, "Raw");
+                  case "getGuidePageUrl":
+                  case "getCategories": {
+                    addtoList(action, "LaunchCatalog", entry, refineLevel);
+                  }
+
+                  case "addToCart": {
+                    addtoList(action, "AddToCart", entry, refineLevel);
+
+                    break;
+                  }
+
+                  case "searchProducts":
+                  case "getConfigurationData": {
+                    addtoList(action, "SearchProducts", entry, refineLevel);
+
+                    break;
+                  }
+
+                  case "getDefaultLineItemRollup":
+                  case "getCart":
+                  case "getCartLineNumbers":
+                  case "getLineItemFieldsMetaData":
+                  case "getSObjectPermissions":
+                  case "getAllCartViews":
+                  case "getObjectForSummary":
+                  case "getAnalyticsRecommendedProducts":
+                  case "getReferenceObjects":
+                  case "getCartLineItems":
+                  case "getChildCartLineItems":
+                  case "getProductDetails": {
+                    addtoList(action, "CartLaunch", entry, refineLevel);
+
+                    break;
+                  }
+
+                  case "getProductDetails": {
+                    addtoList(action, "CartLaunch", entry, refineLevel);
+
+                    break;
+                  }
+                  default: {
+                    if (postJData.method == "performAction")
+                      addtoList(action, postJData.method, entry, refineLevel);
+
+                    break;
+                  }
                 }
               }
             }
@@ -230,7 +237,6 @@ export class AppComponent {
         console.log("Tracked apiData" + JSON.stringify(apiData));
         console.log("Non grouped apiData" + JSON.stringify(nonParsedApis));
         console.log("Non grouped raw apiData" + JSON.stringify(rawApis));
-
 
         let downloader = function downloadAsCSV() {
           let csvData: string = "";
@@ -247,73 +253,72 @@ export class AppComponent {
             "Avg Time Per Call" +
             "\r\n";
           csvData += "" + "," + "," + "," + "," + "\r\n";
-          if(self.userSelectionRawAPI === true)
-          {
-              rawApis.forEach((value:[string,string,number]) =>
-              {
-                    csvData +=
-                  value[0] +
-                  "," +
-                  value[1] +
-                  "," +
-                  value[2] +
-                  "," +
-                  1 +
-                  "," +
-                  value[2] +
-                  "\r\n";
-
-              });
-          }
-          else
-        {
-          allData.forEach(
-            (
-              value: [
-                Map<string, [number, number]>,
-                Map<string, [number, number]>
-              ],
-              key: string
-            ) => {
-              csvData += key + "," + "," + "," + "," + "\r\n";
-              value[0].forEach((value: [number, number], keyInner: string) => {
-                csvData +=
-                  key +
-                  "," +
-                  keyInner +
-                  "," +
-                  value[0] +
-                  "," +
-                  value[1] +
-                  "," +
-                  value[0] / value[1] +
-                  "\r\n";
-              });
+          if (self.userSelectionRawAPI === true) {
+            rawApis.forEach((value: [string, string, number]) => {
               csvData +=
-                "--------Non Grouped API------" +
+                value[0] +
                 "," +
+                value[1] +
                 "," +
+                (value[1] != "" ? value[2] : "") +
                 "," +
+                (value[1] != "" ? "1" : "") +
                 "," +
+                (value[1] != "" ? value[2] : "") +
                 "\r\n";
-
-              value[1].forEach((value: [number, number], keyInner: string) => {
+            });
+          } else {
+            allData.forEach(
+              (
+                value: [
+                  Map<string, [number, number]>,
+                  Map<string, [number, number]>
+                ],
+                key: string
+              ) => {
+                csvData += key + "," + "," + "," + "," + "\r\n";
+                value[0].forEach(
+                  (value: [number, number], keyInner: string) => {
+                    csvData +=
+                      key +
+                      "," +
+                      keyInner +
+                      "," +
+                      (keyInner != "" ? value[0] : "") +
+                      "," +
+                      (keyInner != "" ? value[1] : "") +
+                      "," +
+                      (keyInner != "" ? value[0] / value[1] : "") +
+                      "\r\n";
+                  }
+                );
                 csvData +=
-                  key +
+                  "--------Non Grouped API------" +
                   "," +
-                  keyInner +
                   "," +
-                  value[0] +
                   "," +
-                  value[1] +
                   "," +
-                  value[0] / value[1] +
                   "\r\n";
-              });
-              csvData += "" + "," + "," + "," + "," + "\r\n";
-            }
-          );
-        }
+
+                value[1].forEach(
+                  (value: [number, number], keyInner: string) => {
+                    csvData +=
+                      key +
+                      "," +
+                      keyInner +
+                      "," +
+                      (keyInner != "" ? value[0] : "") +
+                      "," +
+                      (keyInner != "" ? value[1] : "") +
+                      "," +
+                      (keyInner != "" ? value[0] / value[1] : "") +
+                      "\r\n";
+                  }
+                );
+                csvData += "" + "," + "," + "," + "," + "\r\n";
+              }
+            );
+          }
           /* csvData += "--------Non Tracked API------" + "\r\n";
 
           nonParsedApis.forEach((value: [number, number], key: string) => {
