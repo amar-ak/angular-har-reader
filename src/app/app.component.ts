@@ -61,28 +61,62 @@ export class AppComponent {
 
         let flatten = function(data) {
           var result = {};
+
+          function addDataWithinMaps(theMap,key,dataTowork)
+          {
+
+          if (theMap.get(key) == null) {
+                  if (dataTowork.time != null) {
+                    let recTime: [number, number];
+                    recTime = [dataTowork.time, 1];
+                    theMap.set(key, recTime);
+                  }
+                } else {
+                  //get the value to add
+                  if (dataTowork.time != null) {
+                    let recTime = theMap.get(key);
+                    let p1 = recTime[0];
+                    p1 += dataTowork.time;
+
+                    let p2 = recTime[1];
+                    p2++;
+                    recTime = [p1, p2];
+                    theMap.set(key, recTime);
+                  }
+                }
+
+          }
           function search(payLoad) {
             let addtoList = function(action, category,cpqMethod, req, parseStrategy) {
               var setter;
               switch (parseStrategy) {
                 case "Coarse": {
-                  setter = parsedApis;
+                  addDataWithinMaps(parsedApis,cpqMethod,req) ;
+
                   break;
                 }
                 case "Fine": {
-                  setter = parsedApis;
+                  addDataWithinMaps(parsedApis,category,req) ;
+
                   break;
                 }
                 case "Raw": {
                   setter = rawApis;
+                  let data = [action, category, req.time];
+                  setter.push(data);
+                  //addDataWithinMaps(rawApis,cpqMethod,req) ;
+
                   break;
                 }
                 default: {
                   setter = rawApis;
+                  let data = [action, category, req.time];
+                  setter.push(data);
                   break;
                 }
               }
 
+              /*
               if (parseStrategy !== "Raw") {
                 if (setter.get(category) == null) {
                   if (req.time != null) {
@@ -106,7 +140,7 @@ export class AppComponent {
               } else {
                 let data = [action, category, req.time];
                 setter.push(data);
-              }
+              }*/
             };
             let i = 1;
             function addAction() {
