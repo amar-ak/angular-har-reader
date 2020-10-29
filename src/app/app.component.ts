@@ -62,7 +62,7 @@ export class AppComponent {
         let flatten = function(data) {
           var result = {};
           function search(payLoad) {
-            let addtoList = function(action, category, req, parseStrategy) {
+            let addtoList = function(action, category,cpqMethod, req, parseStrategy) {
               var setter;
               switch (parseStrategy) {
                 case "Coarse": {
@@ -88,7 +88,7 @@ export class AppComponent {
                   if (req.time != null) {
                     let recTime: [number, number];
                     recTime = [req.time, 1];
-                    setter.set(category, recTime);
+                    setter.set(parseStrategy === "Coarse" ? cpqMethod: category, recTime);
                   }
                 } else {
                   //get the value to add
@@ -100,7 +100,7 @@ export class AppComponent {
                     let p2 = recTime[1];
                     p2++;
                     recTime = [p1, p2];
-                    setter.set(category, recTime);
+                    setter.set(parseStrategy === "Coarse" ? cpqMethod: category, recTime);
                   }
                 }
               } else {
@@ -176,23 +176,23 @@ export class AppComponent {
                 switch (postJData.method) {
                   case "updatePrice":
                   case "updateCartLineItems": {
-                    addtoList(action, "Pricing", entry, refineLevel);
+                    addtoList(action, "Pricing",postJData.method, entry, refineLevel);
                     break;
                   }
                   case "getGuidePageUrl":
                   case "getCategories": {
-                    addtoList(action, "LaunchCatalog", entry, refineLevel);
+                    addtoList(action, "LaunchCatalog",postJData.method, entry, refineLevel);
                   }
 
                   case "addToCart": {
-                    addtoList(action, "AddToCart", entry, refineLevel);
+                    addtoList(action, "AddToCart",postJData.method, entry, refineLevel);
 
                     break;
                   }
 
                   case "searchProducts":
                   case "getConfigurationData": {
-                    addtoList(action, "SearchProducts", entry, refineLevel);
+                    addtoList(action, "SearchProducts",postJData.method, entry, refineLevel);
 
                     break;
                   }
@@ -209,19 +209,19 @@ export class AppComponent {
                   case "getCartLineItems":
                   case "getChildCartLineItems":
                   case "getProductDetails": {
-                    addtoList(action, "CartLaunch", entry, refineLevel);
+                    addtoList(action, "CartLaunch",postJData.method, entry, refineLevel);
 
                     break;
                   }
 
                   case "getProductDetails": {
-                    addtoList(action, "CartLaunch", entry, refineLevel);
+                    addtoList(action, "CartLaunch",postJData.method, entry, refineLevel);
 
                     break;
                   }
                   default: {
                     if (postJData.method == "performAction")
-                      addtoList(action, postJData.method, entry, refineLevel);
+                      addtoList(action,postJData.method, postJData.method, entry, refineLevel);
 
                     break;
                   }
