@@ -35,6 +35,16 @@ export class AppComponent {
 
   handleFileInput = event => {
     var self = this;
+
+    function getLevel() {
+      let lvl;
+      if (self.userSelectionGrouped) lvl = "Fine";
+      else if (self.userSelectionOnlyAPI) lvl = "Coarse";
+      else if (self.userSelectionRawAPI === true) lvl = "Raw";
+      return lvl;
+    }
+
+    eval("remotingcall('Download',getLevel(),'HARParser')");
     let fileList: FileList = event.target.files;
     let apiList: String[] = ["updatePrice", "updateCartLineItems"];
     if (fileList.length > 0) {
@@ -95,17 +105,20 @@ export class AppComponent {
               switch (parseStrategy) {
                 case "Coarse": {
                   addDataWithinMaps(parsedApis, cpqMethod, req);
+
                   break;
                 }
                 case "Fine": {
                   addDataWithinMaps(parsedApis, category, req);
+
                   break;
                 }
                 case "Raw": {
-                  //strange problem cant directly do rawApis.push(data);
                   setter = rawApis;
                   let data = [action, cpqMethod, req.time];
                   setter.push(data);
+                  //addDataWithinMaps(rawApis,cpqMethod,req) ;
+
                   break;
                 }
                 default: {
@@ -115,32 +128,6 @@ export class AppComponent {
                   break;
                 }
               }
-
-              /*
-              if (parseStrategy !== "Raw") {
-                if (setter.get(category) == null) {
-                  if (req.time != null) {
-                    let recTime: [number, number];
-                    recTime = [req.time, 1];
-                    setter.set(parseStrategy === "Coarse" ? cpqMethod: category, recTime);
-                  }
-                } else {
-                  //get the value to add
-                  if (req.time != null) {
-                    let recTime = setter.get(category);
-                    let p1 = recTime[0];
-                    p1 += req.time;
-
-                    let p2 = recTime[1];
-                    p2++;
-                    recTime = [p1, p2];
-                    setter.set(parseStrategy === "Coarse" ? cpqMethod: category, recTime);
-                  }
-                }
-              } else {
-                let data = [action, category, req.time];
-                setter.push(data);
-              }*/
             };
             let i = 1;
             function addAction() {
@@ -202,10 +189,12 @@ export class AppComponent {
                 var downloadGrouped = document.getElementById("groupedAPI");
                 //var grouped = downloadGrouped.getAttribute('checked') ;
 
-                let refineLevel;
+                let refineLevel = getLevel();
+
+                /*
                 if (self.userSelectionGrouped) refineLevel = "Fine";
                 else if (self.userSelectionOnlyAPI) refineLevel = "Coarse";
-                else if (self.userSelectionRawAPI === true) refineLevel = "Raw";
+                else if (self.userSelectionRawAPI === true) refineLevel = "Raw";*/
 
                 switch (postJData.method) {
                   case "updatePrice":
@@ -395,12 +384,7 @@ export class AppComponent {
               }
             );
           }
-          /* csvData += "--------Non Tracked API------" + "\r\n";
 
-          nonParsedApis.forEach((value: [number, number], key: string) => {
-            csvData += key + "," + value[0] + "," + value[1] + "\r\n";
-          });
-*/
           var blob = new Blob([csvData], { type: "text/csv" });
           var url = window.URL.createObjectURL(blob);
 
@@ -423,36 +407,3 @@ export class AppComponent {
     }
   };
 }
-
-/*   var recMap = function(obj) {
-  return obj.map(obj, function(val) { 
-    return typeof val !== 'object' ? val : recMap(val); 
-  });
-}*/
-
-// var fields = Object.keys(jsonObj[0]) ;
-
-/* let flatten = (obj, path = []) => {
-               console.log(Object.keys(obj))
-               if(Object !== null && Object.keys !==null)
-               
-  return Object.keys(obj).reduce((result, prop) => {
-    if (typeof obj[prop] !== "object") {
-      result[path.concat(prop).join(".")] = obj[prop];
-      return result;
-    
-    }
-    return Object.assign(result, flatten(obj[prop], path.concat(prop)),result);
-  }, {});
-}*/
-/*
-            var replacer = function(key, value) { return value === null ? '' : value } 
-            var csv = jsonObj.map(function(row){
-            return fields.map(function(fieldName){
-              return JSON.stringify(row[fieldName], replacer)
-            }).join(',')
-})
-csv.unshift(fields.join(',')) // add header column
- csv = csv.join('\r\n');
-console.log(csv)
-*/
