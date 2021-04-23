@@ -7,3 +7,4 @@ export class APIDetail {
   public NumberOfCalls: number;
   public NetTime: number;
 }
+ 
