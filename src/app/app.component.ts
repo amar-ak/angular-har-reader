@@ -192,14 +192,9 @@ export class AppComponent {
                 } else {
                   //  debugger ;
                   console.log("Method :" + postJData.method);
-                  // var downloadAll = document.getElementById('onlyAPI') ;
                   var downloadGrouped = document.getElementById("groupedAPI");
-                  //var grouped = downloadGrouped.getAttribute('checked') ;
                   let refineLevel = getLevel();
-                  /*
-if (self.userSelectionGrouped) refineLevel = "Fine";
-else if (self.userSelectionOnlyAPI) refineLevel = "Coarse";
-else if (self.userSelectionRawAPI === true) refineLevel = "Raw";*/
+
                   switch (postJData.method) {
                     case "updatePrice":
                     case "updateCartTotals":
