@@ -1,5 +1,7 @@
+import { componentFactoryResolverProviderDef } from "@angular/compiler/src/view_compiler/provider_compiler";
 import { Component, Input, VERSION } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import { APIDetail } from "./APIDetail";
 
 @Component({
   selector: "my-app",
@@ -44,7 +46,7 @@ export class AppComponent {
       return lvl;
     }
 
-    eval("remotingcall('Download',getLevel(),'HARParser')");
+    // eval("remotingcall('Download',getLevel(),'HARParser')");
     let fileList: FileList = event.target.files;
     let apiList: String[] = ["updatePrice", "updateCartLineItems"];
     if (fileList.length > 0) {
@@ -57,12 +59,9 @@ export class AppComponent {
         let csvToUse;
         let parsedApis = new Map();
         let nonParsedApis = new Map();
-        let rawApis: [string, string, number][] = [];
+        let rawApis: APIDetail[] = [];
         let allData = new Map();
-        let superMap: [
-          Map<string, [number, number]>,
-          Map<string, [number, number]>
-        ];
+        let superMap: [Map<string, APIDetail>, Map<string, APIDetail>];
 
         var jsonDt = JSON.parse(e.target.result.toString());
         // console.log(jsonDt) ;
@@ -72,23 +71,31 @@ export class AppComponent {
         let flatten = function(data) {
           var result = {};
 
-          function addDataWithinMaps(theMap, key, dataTowork) {
+          function addDataWithinMaps(theMap, key, dataTowork, action) {
             if (theMap.get(key) == null) {
               if (dataTowork.time != null) {
-                let recTime: [number, number];
-                recTime = [dataTowork.time, 1];
+                let recTime = new APIDetail(); //[number, number];
+                recTime.NetTime = dataTowork.time;
+                recTime.NumberOfCalls = 1;
+                recTime.APIName = key;
+                recTime.BlockTime = dataTowork.timings.blocked;
+                recTime.WaitTime = dataTowork.timings.wait;
+                recTime.RecieveTime = dataTowork.timings.receive;
+                recTime.MarkerAction = action;
                 theMap.set(key, recTime);
               }
             } else {
               //get the value to add
               if (dataTowork.time != null) {
                 let recTime = theMap.get(key);
-                let p1 = recTime[0];
-                p1 += dataTowork.time;
+                recTime.NetTime += dataTowork.time;
+                recTime.NumberOfCalls++;
+                recTime.APIName = key;
+                recTime.BlockTime = dataTowork.timings.blocked;
+                recTime.WaitTime = dataTowork.timings.wait;
+                recTime.RecieveTime = dataTowork.timings.receive;
+                recTime.MarkerAction = action;
 
-                let p2 = recTime[1];
-                p2++;
-                recTime = [p1, p2];
                 theMap.set(key, recTime);
               }
             }
@@ -104,18 +111,25 @@ export class AppComponent {
               var setter;
               switch (parseStrategy) {
                 case "Coarse": {
-                  addDataWithinMaps(parsedApis, cpqMethod, req);
+                  addDataWithinMaps(parsedApis, cpqMethod, req, action);
 
                   break;
                 }
                 case "Fine": {
-                  addDataWithinMaps(parsedApis, category, req);
+                  addDataWithinMaps(parsedApis, category, req, action);
 
                   break;
                 }
                 case "Raw": {
                   setter = rawApis;
-                  let data = [action, cpqMethod, req.time];
+                  let data = new APIDetail();
+                  data.APIName = cpqMethod;
+                  data.NetTime = req.time;
+                  data.NumberOfCalls = 1;
+                  data.BlockTime = req.timings.blocked;
+                  data.WaitTime = req.timings.wait;
+                  data.RecieveTime = req.timings.receive;
+                  data.MarkerAction = action;
                   setter.push(data);
                   //addDataWithinMaps(rawApis,cpqMethod,req) ;
 
@@ -123,7 +137,14 @@ export class AppComponent {
                 }
                 default: {
                   setter = rawApis;
-                  let data = [action, cpqMethod, req.time];
+                  let data = new APIDetail();
+                  data.APIName = cpqMethod;
+                  data.NetTime = req.time;
+                  data.NumberOfCalls = 1;
+                  data.BlockTime = req.timings.blocked;
+                  data.WaitTime = req.timings.wait;
+                  data.RecieveTime = req.timings.receive;
+                  data.MarkerAction = action;
                   setter.push(data);
                   break;
                 }
@@ -137,18 +158,22 @@ export class AppComponent {
             function initializeMaps() {
               parsedApis = new Map();
               nonParsedApis = new Map();
-              let superMap: [
-                Map<string, [number, number]>,
-                Map<string, [number, number]>
-              ];
+              let superMap: [Map<string, APIDetail>, Map<string, APIDetail>];
               superMap = [parsedApis, nonParsedApis];
               action = addAction();
               allData.set(action, superMap);
             }
             superMap = [parsedApis, nonParsedApis];
             var action = addAction();
+
             //for raw APIs
-            rawApis.push([action, "", 0]);
+            /* let apiDtl = new APIDetail();
+            apiDtl.MarkerAction = action;
+            apiDtl.APIName = "";
+            apiDtl.NetTime = null;
+            apiDtl.NumberOfCalls = null;
+
+            rawApis.push(apiDtl);*/
 
             allData.set(action, superMap);
 
@@ -306,6 +331,8 @@ export class AppComponent {
         let downloader = function downloadAsCSV() {
           let csvData: string = "";
 
+          let refineLvl = getLevel();
+          console.debug(refineLvl);
           csvData +=
             "ActionGroup" +
             "," +
@@ -315,48 +342,65 @@ export class AppComponent {
             "," +
             "Total Calls" +
             "," +
-            "Avg Time Per Call" +
-            "\r\n";
-          csvData += "" + "," + "," + "," + "," + "\r\n";
+            "Avg Time Per Call";
+
+          if (refineLvl == "Raw") {
+            csvData += "," + "Wait Time" + "," + "Block time";
+          }
+          csvData += "\r\n";
+
+          csvData += "" + "," + "," + "," + ",";
+          if (refineLvl == "Raw") {
+            csvData += "," + "," + ",";
+          }
+
+          csvData += "\r\n";
+
           if (self.userSelectionRawAPI === true) {
-            rawApis.forEach((value: [string, string, number]) => {
+            rawApis.forEach((value: APIDetail) => {
               csvData +=
-                value[0] +
+                value.MarkerAction +
                 "," +
-                value[1] +
+                value.APIName +
                 "," +
-                (value[1] != "" ? value[2] : "") +
+                (value.APIName != "" ? value.NetTime : "") +
                 "," +
-                (value[1] != "" ? "1" : "") +
+                (value.APIName != "" ? "1" : "") +
                 "," +
-                (value[1] != "" ? value[2] : "") +
-                "\r\n";
+                (value.APIName != "" ? value.NetTime : "");
+
+              if (refineLvl == "Raw") {
+                csvData +=
+                  "," +
+                  (value.APIName != "" ? value.WaitTime : "") +
+                  "," +
+                  (value.APIName != "" ? value.BlockTime : "");
+              }
+
+              csvData += "\r\n";
             });
           } else {
             allData.forEach(
               (
-                value: [
-                  Map<string, [number, number]>,
-                  Map<string, [number, number]>
-                ],
+                value: [Map<string, APIDetail>, Map<string, APIDetail>],
                 key: string
               ) => {
                 csvData += key + "," + "," + "," + "," + "\r\n";
-                value[0].forEach(
-                  (value: [number, number], keyInner: string) => {
-                    csvData +=
-                      key +
-                      "," +
-                      keyInner +
-                      "," +
-                      (keyInner != "" ? value[0] : "") +
-                      "," +
-                      (keyInner != "" ? value[1] : "") +
-                      "," +
-                      (keyInner != "" ? value[0] / value[1] : "") +
-                      "\r\n";
-                  }
-                );
+                value[0].forEach((value: APIDetail, keyInner: string) => {
+                  csvData +=
+                    key +
+                    "," +
+                    keyInner +
+                    "," +
+                    (keyInner != "" ? value.NetTime : "") +
+                    "," +
+                    (keyInner != "" ? value.NumberOfCalls : "") +
+                    "," +
+                    (keyInner != ""
+                      ? value.NetTime / value.NumberOfCalls
+                      : "") +
+                    "\r\n";
+                });
                 csvData +=
                   "--------Non Grouped API------" +
                   "," +
@@ -365,21 +409,21 @@ export class AppComponent {
                   "," +
                   "\r\n";
 
-                value[1].forEach(
-                  (value: [number, number], keyInner: string) => {
-                    csvData +=
-                      key +
-                      "," +
-                      keyInner +
-                      "," +
-                      (keyInner != "" ? value[0] : "") +
-                      "," +
-                      (keyInner != "" ? value[1] : "") +
-                      "," +
-                      (keyInner != "" ? value[0] / value[1] : "") +
-                      "\r\n";
-                  }
-                );
+                value[1].forEach((value: APIDetail, keyInner: string) => {
+                  csvData +=
+                    key +
+                    "," +
+                    keyInner +
+                    "," +
+                    (keyInner != "" ? value.NetTime : "") +
+                    "," +
+                    (keyInner != "" ? value.NumberOfCalls : "") +
+                    "," +
+                    (keyInner != ""
+                      ? value.NetTime / value.NumberOfCalls
+                      : "") +
+                    "\r\n";
+                });
                 csvData += "" + "," + "," + "," + "," + "\r\n";
               }
             );
