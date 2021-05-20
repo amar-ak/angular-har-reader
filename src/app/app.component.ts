@@ -310,14 +310,22 @@ export class AppComponent {
                 }
               } else {
                 if (timeForMiscStart == null && timeForMiscLast == null) {
-                  timeForMiscStart = timeForMiscLast = entry.startedDateTime;
-                } else if (entry.startedDateTime > timeForMiscLast)
-                  timeForMiscLast = entry.startedDateTime;
+                  timeForMiscStart = timeForMiscLast = new Date(
+                    entry.startedDateTime
+                  );
+                } else {
+                  var currentRecTime = new Date(entry.startedDateTime);
 
-                allOtherTime += entry.time;
+                  if (currentRecTime > timeForMiscLast) {
+                    timeForMiscLast = currentRecTime;
+                    var diffTime = timeForMiscLast - timeForMiscStart;
+                    console.log('diffTime: ' + allOtherTime);
+                    allOtherTime = diffTime;
+                  }
+                }
                 allOtherCallCount++;
                 console.log('Misc call URL: ' + entry.request.url);
-                console.log('Misc call time: ' + entry.time);
+                console.log('Misc call time: ' + allOtherTime);
               }
             }
           }
